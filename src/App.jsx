@@ -63,8 +63,8 @@ export default function App(){
   };
 
   const salvarNovaSenha=async()=>{
-    if(!novaSenha||novaSenha.length<6){setSenhaMsg("Minimo 6 caracteres");return}
-    if(novaSenha!==confirmarSenha){setSenhaMsg("Senhas nao conferem");return}
+    if(!novaSenha||novaSenha.length<6){setSenhaMsg("Mínimo 6 caracteres");return}
+    if(novaSenha!==confirmarSenha){setSenhaMsg("Senhas não conferem");return}
     usuario.password=novaSenha;usuario.mustChangePassword=false;await saveAccount(usuario);
     setUsuario({...usuario});setSenhaModal(false);setNovaSenha("");setConfirmarSenha("");setSenhaMsg(null);
   };
@@ -119,9 +119,9 @@ export default function App(){
     </div>
 
     <Modal open={senhaModal} onClose={()=>{}} title="Redefina sua senha">
-      <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>Voce precisa criar uma nova senha antes de continuar.</p>
+      <p style={{color:"#94a3b8",fontSize:13,marginBottom:16}}>Você precisa criar uma nova senha antes de continuar.</p>
       {senhaMsg&&<div style={{color:"#ef4444",fontSize:12,marginBottom:10,background:"rgba(239,68,68,.1)",padding:"8px 12px",borderRadius:10}}>{senhaMsg}</div>}
-      <Input label="Nova senha" type="password" value={novaSenha} onChange={e=>setNovaSenha(e.target.value)} placeholder="Minimo 6 caracteres"/>
+      <Input label="Nova senha" type="password" value={novaSenha} onChange={e=>setNovaSenha(e.target.value)} placeholder="Mínimo 6 caracteres"/>
       <Input label="Confirmar senha" type="password" value={confirmarSenha} onChange={e=>setConfirmarSenha(e.target.value)} placeholder="Repita a senha"/>
       <Btn onClick={salvarNovaSenha}>Salvar e Continuar</Btn>
     </Modal>
