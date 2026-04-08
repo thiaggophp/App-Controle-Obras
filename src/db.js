@@ -61,6 +61,27 @@ export async function saveDiario(d){
 }
 export async function deleteDiario(id){try{await pb.collection("obras_diario").delete(id)}catch{}}
 
+// ─── BACKUP ───
+export async function exportAllData(ownerEmail){
+  const obras=await getObras(ownerEmail);
+  const gastos=[],etapas=[],pagamentos=[],diario=[];
+  for(const o of obras){
+    gastos.push(...await getGastos(o.id));
+    etapas.push(...await getEtapas(o.id));
+    pagamentos.push(...await getPagamentos(o.id));
+    diario.push(...await getDiario(o.id));
+  }
+  return{appName:"ObrasControle",version:1,exportDate:new Date().toISOString(),ownerEmail,obras,gastos,etapas,pagamentos,diario};
+}
+export async function importAllData(data){
+  const idMap={};
+  for(const o of data.obras||[]){const oldId=o.id;o.id=null;const c=await saveObra(o);if(oldId)idMap[oldId]=c.id;}
+  for(const g of data.gastos||[]){if(g.obraId&&idMap[g.obraId])g.obraId=idMap[g.obraId];g.id=null;await saveGasto(g);}
+  for(const e of data.etapas||[]){if(e.obraId&&idMap[e.obraId])e.obraId=idMap[e.obraId];e.id=null;await saveEtapa(e);}
+  for(const p of data.pagamentos||[]){if(p.obraId&&idMap[p.obraId])p.obraId=idMap[p.obraId];p.id=null;await savePagamento(p);}
+  for(const d of data.diario||[]){if(d.obraId&&idMap[d.obraId])d.obraId=idMap[d.obraId];d.id=null;await saveDiario(d);}
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle
