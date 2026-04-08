@@ -40,12 +40,35 @@ export default function Relatorios({user}){
     janela.document.close();janela.focus();setTimeout(()=>janela.print(),300);
   };
 
+  const compartilharWhatsApp=()=>{
+    let texto="*ObrasControle — Relatório*\n"+new Date().toLocaleDateString("pt-BR")+"\n\n";
+    const alvo=obraId==="todas"?null:dados.find(d=>d.id===obraId);
+    if(!alvo){
+      texto+=`*Consolidado — ${dados.length} obras*\n`;
+      texto+=`💸 Total gasto: R$ ${fmt(totalGeral.gasto)}\n`;
+      texto+=`✅ Total recebido: R$ ${fmt(totalGeral.recebido)}\n`;
+      texto+=`⏳ A receber: R$ ${fmt(totalGeral.aReceber)}\n\n`;
+      dados.forEach(d=>{texto+=`🏗️ ${d.nome}${d.cliente?" ("+d.cliente+")":""}: R$ ${fmt(d.totalGasto)} gasto · ${d.progressoEtapas}% concluído\n`});
+    }else{
+      texto+=`🏗️ *${alvo.nome}*${alvo.cliente?" · "+alvo.cliente:""}\n\n`;
+      if(alvo.orcamento>0)texto+=`📋 Orçamento: R$ ${fmt(alvo.orcamento)}\n`;
+      texto+=`💸 Gasto: R$ ${fmt(alvo.totalGasto)}\n`;
+      texto+=`✅ Recebido: R$ ${fmt(alvo.totalRecebido)}\n`;
+      if(alvo.aReceber>0)texto+=`⏳ A receber: R$ ${fmt(alvo.aReceber)}\n`;
+      if(alvo.totalEtapas>0)texto+=`\n📊 Etapas: ${alvo.etapasConcluidas}/${alvo.totalEtapas} (${alvo.progressoEtapas}%)`;
+    }
+    window.open("https://wa.me/?text="+encodeURIComponent(texto),"_blank");
+  };
+
   if(carregando)return(<div style={{padding:"40px 0",textAlign:"center",color:"#475569"}}>Carregando relatório...</div>);
 
   return(<div style={{padding:"0 4px"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <h2 style={{color:"#f1f5f9",margin:0,fontSize:20,fontWeight:700}}>Relatórios</h2>
-      <button onClick={imprimir} style={{background:"rgba(217,119,6,.1)",border:"1px solid rgba(217,119,6,.25)",borderRadius:12,padding:"8px 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🖨️ Imprimir PDF</button>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={compartilharWhatsApp} style={{background:"rgba(37,211,102,.1)",border:"1px solid rgba(37,211,102,.25)",borderRadius:12,padding:"8px 14px",color:"#25d366",fontSize:13,fontWeight:700,cursor:"pointer"}}>📲 WhatsApp</button>
+        <button onClick={imprimir} style={{background:"rgba(217,119,6,.1)",border:"1px solid rgba(217,119,6,.25)",borderRadius:12,padding:"8px 14px",color:"#fbbf24",fontSize:13,fontWeight:700,cursor:"pointer"}}>🖨️ PDF</button>
+      </div>
     </div>
 
     <div style={{marginBottom:14}}>

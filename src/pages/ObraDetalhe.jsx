@@ -25,9 +25,23 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const[editGasto,setEditGasto]=useState(null);
 
   const[gastoForm,setGastoForm]=useState({data:HOJE,tipo:"material",descricao:"",valor:"",fornecedor:""});
-  const[etapaForm,setEtapaForm]=useState({nome:"",percentual:0});
+  const[etapaForm,setEtapaForm]=useState({nome:"",dataInicio:"",dataFim:""});
   const[pagForm,setPagForm]=useState({data:HOJE,valor:"",tipo:"recebido",descricao:"",status:"pendente"});
-  const[diarioForm,setDiarioForm]=useState({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});
+  const[diarioForm,setDiarioForm]=useState({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:"",foto:""});
+
+  const handleFotoDiario=(e)=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxW=900;const scale=Math.min(1,maxW/img.width);
+        const canvas=document.createElement("canvas");canvas.width=img.width*scale;canvas.height=img.height*scale;
+        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+        setDiarioForm(f=>({...f,foto:canvas.toDataURL("image/jpeg",0.72)}));
+      };img.src=ev.target.result;
+    };reader.readAsDataURL(file);
+  };
 
   const recarregar=async()=>{
     const[g,e,p,d]=await Promise.all([getGastos(obra.id),getEtapas(obra.id),getPagamentos(obra.id),getDiario(obra.id)]);
@@ -51,8 +65,8 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
 
   const salvarEtapa=async()=>{
     if(!etapaForm.nome.trim())return;
-    const e={...etapaForm,ownerEmail:user.email,obraId:obra.id,ordem:etapas.length+1,status:"pendente",percentual:parseInt(etapaForm.percentual)||0};
-    await saveEtapa(e);setEtapaModal(false);setEtapaForm({nome:"",percentual:0});await recarregar();
+    const e={...etapaForm,ownerEmail:user.email,obraId:obra.id,ordem:etapas.length+1,status:"pendente"};
+    await saveEtapa(e);setEtapaModal(false);setEtapaForm({nome:"",dataInicio:"",dataFim:""});await recarregar();
   };
 
   const alterarStatusEtapa=async(etapa)=>{
@@ -69,7 +83,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const salvarDiario=async()=>{
     if(!diarioForm.descricao.trim())return;
     const d={...diarioForm,ownerEmail:user.email,obraId:obra.id,trabalhadores:parseInt(diarioForm.trabalhadores)||0};
-    await saveDiario(d);setDiarioModal(false);await recarregar();
+    await saveDiario(d);setDiarioModal(false);setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:"",foto:""});await recarregar();
   };
 
   const totalGasto=gastos.reduce((s,g)=>s+g.valor,0);
@@ -117,6 +131,18 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
       </div>
     </div>
 
+    {obra.orcamento>0&&(()=>{
+      const pct=totalGasto/obra.orcamento;
+      const diasDecorridos=obra.dataInicio?Math.max(1,Math.floor((new Date()-new Date(obra.dataInicio+"T12:00"))/(1000*60*60*24))):null;
+      const diasTotal=obra.dataInicio&&obra.dataPrevisao?Math.max(1,Math.floor((new Date(obra.dataPrevisao+"T12:00")-new Date(obra.dataInicio+"T12:00"))/(1000*60*60*24))):null;
+      const percTempo=diasDecorridos&&diasTotal?diasDecorridos/diasTotal:null;
+      const alerta=pct>=1?"Orçamento estourado!":pct>=0.9?"Alerta: 90%+ do orçamento gasto.":percTempo&&pct>percTempo*1.15?"Ritmo de gasto acima do planejado.":null;
+      if(!alerta)return null;
+      return(<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.2)",borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:16}}>⚠️</span>
+        <span style={{color:"#fca5a5",fontSize:13,fontWeight:600}}>{alerta} Gasto: {Math.round(pct*100)}% do orçamento.</span>
+      </div>);
+    })()}
     <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:4}}>
       {ABAS.map(a=><button key={a.id} onClick={()=>setAba(a.id)}
         style={{padding:"7px 14px",borderRadius:12,border:"none",background:aba===a.id?"#d97706":"rgba(255,255,255,0.05)",color:aba===a.id?"#fff":"#94a3b8",fontSize:13,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5}}>
@@ -129,22 +155,30 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
         <button onClick={()=>setEtapaModal(true)} style={{flex:1,background:"linear-gradient(135deg,#d97706,#92400e)",border:"none",borderRadius:12,padding:"10px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>+ Nova Etapa</button>
         {etapas.length===0&&<button onClick={adicionarEtapasPadrao} style={{flex:1,background:"rgba(217,119,6,.1)",border:"1px solid rgba(217,119,6,.25)",borderRadius:12,padding:"10px",color:"#f59e0b",fontSize:12,fontWeight:700,cursor:"pointer"}}>Usar etapas padrao</button>}
       </div>
-      {etapas.map(e=><Card key={e.id}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{flex:1}}>
-            <div style={{color:"#f1f5f9",fontWeight:600,fontSize:14}}>{e.nome}</div>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
-              <span style={{color:statusEtapaColor[e.status],fontSize:11,fontWeight:700}}>● {statusEtapaLabel[e.status]}</span>
+      {etapas.map(e=>{
+        const atrasada=e.status!=="concluida"&&e.dataFim&&new Date(e.dataFim+"T23:59")< new Date();
+        return(<Card key={e.id}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                <span style={{color:"#f1f5f9",fontWeight:600,fontSize:14}}>{e.nome}</span>
+                {atrasada&&<span style={{background:"rgba(239,68,68,.15)",color:"#ef4444",fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:10}}>⚠ ATRASADA</span>}
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4,flexWrap:"wrap"}}>
+                <span style={{color:statusEtapaColor[e.status],fontSize:11,fontWeight:700}}>● {statusEtapaLabel[e.status]}</span>
+                {e.dataInicio&&<span style={{color:"#475569",fontSize:11}}>De {fmtData(e.dataInicio)}</span>}
+                {e.dataFim&&<span style={{color:atrasada?"#ef4444":"#475569",fontSize:11}}>até {fmtData(e.dataFim)}</span>}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <button onClick={()=>alterarStatusEtapa(e)} style={{background:"rgba(217,119,6,.1)",border:"1px solid rgba(217,119,6,.2)",borderRadius:8,padding:"6px 10px",color:"#f59e0b",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                {e.status==="pendente"?"Iniciar":e.status==="andamento"?"Concluir":"Reabrir"}
+              </button>
+              <button onClick={()=>setDeleteModal({id:e.id,tipo:"etapa",desc:e.nome})} style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:14}}>✕</button>
             </div>
           </div>
-          <div style={{display:"flex",gap:6,alignItems:"center"}}>
-            <button onClick={()=>alterarStatusEtapa(e)} style={{background:"rgba(217,119,6,.1)",border:"1px solid rgba(217,119,6,.2)",borderRadius:8,padding:"6px 10px",color:"#f59e0b",fontSize:11,fontWeight:700,cursor:"pointer"}}>
-              {e.status==="pendente"?"Iniciar":e.status==="andamento"?"Concluir":"Reabrir"}
-            </button>
-            <button onClick={()=>setDeleteModal({id:e.id,tipo:"etapa",desc:e.nome})} style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:14}}>✕</button>
-          </div>
-        </div>
-      </Card>)}
+        </Card>);
+      })}
       {etapas.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#475569"}}>Nenhuma etapa cadastrada</div>}
     </div>}
 
@@ -162,15 +196,37 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
           </div>
         </div>
       </Card>)}
-      {gastos.length>0&&<div style={{background:"rgba(239,68,68,.08)",borderRadius:14,padding:"12px 16px",border:"1px solid rgba(239,68,68,.15)",marginTop:8}}>
-        <div style={{display:"flex",justifyContent:"space-between"}}>
+      {gastos.length>0&&<div style={{background:"rgba(239,68,68,.08)",borderRadius:14,padding:"14px 16px",border:"1px solid rgba(239,68,68,.15)",marginTop:8}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
           <span style={{color:"#fca5a5",fontSize:13,fontWeight:600}}>Total gasto</span>
           <span style={{color:"#ef4444",fontWeight:800,fontSize:15}}>R$ {fmt(totalGasto)}</span>
         </div>
-        {obra.orcamento>0&&<div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
-          <span style={{color:"#94a3b8",fontSize:12}}>Orcamento restante</span>
-          <span style={{color:obra.orcamento-totalGasto>=0?"#22c55e":"#ef4444",fontWeight:700,fontSize:13}}>R$ {fmt(obra.orcamento-totalGasto)}</span>
-        </div>}
+        {obra.orcamento>0&&<>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{color:"#94a3b8",fontSize:12}}>Orcamento restante</span>
+            <span style={{color:obra.orcamento-totalGasto>=0?"#22c55e":"#ef4444",fontWeight:700,fontSize:13}}>R$ {fmt(obra.orcamento-totalGasto)}</span>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.08)",borderRadius:4,height:6,overflow:"hidden",marginBottom:12}}>
+            <div style={{background:totalGasto/obra.orcamento>0.9?"#ef4444":totalGasto/obra.orcamento>0.7?"#f59e0b":"#22c55e",height:"100%",width:Math.min(100,(totalGasto/obra.orcamento)*100)+"%",borderRadius:4}}/>
+          </div>
+        </>}
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:10,marginTop:4}}>
+          <div style={{color:"#94a3b8",fontSize:11,fontWeight:700,marginBottom:8}}>POR TIPO</div>
+          {[{v:"material",l:"Material"},{v:"mao_de_obra",l:"Mão de obra"},{v:"equipamento",l:"Equipamento"},{v:"outro",l:"Outro"}].map(({v,l})=>{
+            const tot=gastos.filter(g=>g.tipo===v).reduce((s,g)=>s+g.valor,0);
+            if(!tot)return null;
+            const pct=totalGasto>0?Math.round((tot/totalGasto)*100):0;
+            return(<div key={v} style={{marginBottom:8}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                <span style={{color:"#94a3b8",fontSize:12}}>{l}</span>
+                <span style={{color:"#f1f5f9",fontSize:12,fontWeight:600}}>R$ {fmt(tot)} <span style={{color:"#64748b",fontSize:11}}>({pct}%)</span></span>
+              </div>
+              <div style={{background:"rgba(255,255,255,0.06)",borderRadius:3,height:4,overflow:"hidden"}}>
+                <div style={{background:"#f59e0b",height:"100%",width:pct+"%",borderRadius:3}}/>
+              </div>
+            </div>);
+          })}
+        </div>
       </div>}
       {gastos.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:"#475569"}}>Nenhum gasto registrado</div>}
     </div>}
@@ -206,8 +262,9 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
 
     {aba==="diario"&&<div>
       <button onClick={()=>{setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});setDiarioModal(true)}} style={{width:"100%",background:"linear-gradient(135deg,#d97706,#92400e)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:12}}>+ Registro do Dia</button>
-      {diario.map(d=><Card key={d.id}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+      {diario.map(d=><Card key={d.id} style={{padding:0,overflow:"hidden"}}>
+        {d.foto&&<img src={d.foto} alt="foto" style={{width:"100%",height:150,objectFit:"cover"}}/>}
+        <div style={{padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div style={{flex:1}}>
             <div style={{color:"#fbbf24",fontWeight:700,fontSize:13}}>{fmtData(d.data)}{d.clima?" · "+d.clima:""}{d.trabalhadores?" · "+d.trabalhadores+" trabalhadores":""}</div>
             <div style={{color:"#f1f5f9",fontSize:13,marginTop:4,lineHeight:1.5}}>{d.descricao}</div>
@@ -230,6 +287,10 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
 
     <Modal open={etapaModal} onClose={()=>setEtapaModal(false)} title="Nova Etapa">
       <Input label="Nome da etapa" value={etapaForm.nome} onChange={e=>setEtapaForm({...etapaForm,nome:e.target.value})} placeholder="Ex: Fundacao, Alvenaria..."/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+        <Input label="Data início (opcional)" type="date" value={etapaForm.dataInicio||""} onChange={e=>setEtapaForm({...etapaForm,dataInicio:e.target.value})}/>
+        <Input label="Data fim (opcional)" type="date" value={etapaForm.dataFim||""} onChange={e=>setEtapaForm({...etapaForm,dataFim:e.target.value})}/>
+      </div>
       <Btn onClick={salvarEtapa}>Adicionar Etapa</Btn>
     </Modal>
 
@@ -248,6 +309,13 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
       <Input label="Trabalhadores presentes" type="number" value={diarioForm.trabalhadores||""} onChange={e=>setDiarioForm({...diarioForm,trabalhadores:e.target.value})} placeholder="0" inputMode="numeric"/>
       <Input label="Clima (opcional)" value={diarioForm.clima||""} onChange={e=>setDiarioForm({...diarioForm,clima:e.target.value})} placeholder="Ex: Sol, chuva, nublado..."/>
       <Input label="Observacoes (opcional)" value={diarioForm.obs||""} onChange={e=>setDiarioForm({...diarioForm,obs:e.target.value})} placeholder="Ocorrencias, problemas..."/>
+      <div style={{marginBottom:16}}>
+        {diarioForm.foto&&<img src={diarioForm.foto} alt="preview" style={{width:"100%",height:100,objectFit:"cover",borderRadius:8,marginBottom:6}}/>}
+        <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(217,119,6,.08)",border:"1px solid rgba(217,119,6,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#f59e0b",fontSize:13,fontWeight:600}}>
+          📷 {diarioForm.foto?"Trocar foto":"Foto da obra"}
+          <input type="file" accept="image/*" capture="environment" onChange={handleFotoDiario} style={{display:"none"}}/>
+        </label>
+      </div>
       <Btn onClick={salvarDiario}>Salvar Registro</Btn>
     </Modal>
 
