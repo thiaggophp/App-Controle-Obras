@@ -22,7 +22,7 @@ export async function addSignupRequest(req){
 export async function deleteSignupRequest(email){try{const r=await pb.collection("obras_signup_requests").getFirstListItem(`email="${email}"`);await pb.collection("obras_signup_requests").delete(r.id)}catch{}}
 
 // ─── OBRAS ───
-export async function getObras(ownerEmail){try{return await pb.collection("obras_obras").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-dataInicio"})}catch{return[]}}
+export async function getObras(ownerEmail){try{return await pb.collection("obras_obras").getFullList({filter:`ownerEmail="${ownerEmail}"`})}catch{return[]}}
 export async function saveObra(o){
   if(o.id)return pb.collection("obras_obras").update(o.id,o);
   const c=await pb.collection("obras_obras").create(o);o.id=c.id;return c;
@@ -30,7 +30,7 @@ export async function saveObra(o){
 export async function deleteObra(id){try{await pb.collection("obras_obras").delete(id)}catch{}}
 
 // ─── GASTOS ───
-export async function getGastos(obraId){try{return await pb.collection("obras_gastos").getFullList({filter:`obraId="${obraId}"`,sort:"-data"})}catch{return[]}}
+export async function getGastos(obraId){try{return await pb.collection("obras_gastos").getFullList({filter:`obraId="${obraId}"`})}catch{return[]}}
 export async function saveGasto(g){
   if(g.id)return pb.collection("obras_gastos").update(g.id,g);
   const c=await pb.collection("obras_gastos").create(g);g.id=c.id;return c;
@@ -38,7 +38,7 @@ export async function saveGasto(g){
 export async function deleteGasto(id){try{await pb.collection("obras_gastos").delete(id)}catch{}}
 
 // ─── ETAPAS ───
-export async function getEtapas(obraId){try{return await pb.collection("obras_etapas").getFullList({filter:`obraId="${obraId}"`,sort:"ordem"})}catch{return[]}}
+export async function getEtapas(obraId){try{return await pb.collection("obras_etapas").getFullList({filter:`obraId="${obraId}"`})}catch{return[]}}
 export async function saveEtapa(e){
   if(e.id)return pb.collection("obras_etapas").update(e.id,e);
   const c=await pb.collection("obras_etapas").create(e);e.id=c.id;return c;
@@ -46,7 +46,7 @@ export async function saveEtapa(e){
 export async function deleteEtapa(id){try{await pb.collection("obras_etapas").delete(id)}catch{}}
 
 // ─── PAGAMENTOS ───
-export async function getPagamentos(obraId){try{return await pb.collection("obras_pagamentos").getFullList({filter:`obraId="${obraId}"`,sort:"-data"})}catch{return[]}}
+export async function getPagamentos(obraId){try{return await pb.collection("obras_pagamentos").getFullList({filter:`obraId="${obraId}"`})}catch{return[]}}
 export async function savePagamento(p){
   if(p.id)return pb.collection("obras_pagamentos").update(p.id,p);
   const c=await pb.collection("obras_pagamentos").create(p);p.id=c.id;return c;
@@ -54,7 +54,7 @@ export async function savePagamento(p){
 export async function deletePagamento(id){try{await pb.collection("obras_pagamentos").delete(id)}catch{}}
 
 // ─── DIÁRIO ───
-export async function getDiario(obraId){try{return await pb.collection("obras_diario").getFullList({filter:`obraId="${obraId}"`,sort:"-data"})}catch{return[]}}
+export async function getDiario(obraId){try{return await pb.collection("obras_diario").getFullList({filter:`obraId="${obraId}"`})}catch{return[]}}
 export async function saveDiario(d){
   if(d.id)return pb.collection("obras_diario").update(d.id,d);
   const c=await pb.collection("obras_diario").create(d);d.id=c.id;return c;
