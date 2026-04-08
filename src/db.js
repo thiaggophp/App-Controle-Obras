@@ -22,7 +22,7 @@ export async function addSignupRequest(req){
 export async function deleteSignupRequest(email){try{const r=await pb.collection("obras_signup_requests").getFirstListItem(`email="${email}"`);await pb.collection("obras_signup_requests").delete(r.id)}catch{}}
 
 // ─── OBRAS ───
-export async function getObras(ownerEmail){try{return await pb.collection("obras_obras").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-created"})}catch{return[]}}
+export async function getObras(ownerEmail){try{return await pb.collection("obras_obras").getFullList({filter:`ownerEmail="${ownerEmail}"`,sort:"-dataInicio"})}catch{return[]}}
 export async function saveObra(o){
   if(o.id)return pb.collection("obras_obras").update(o.id,o);
   const c=await pb.collection("obras_obras").create(o);o.id=c.id;return c;
