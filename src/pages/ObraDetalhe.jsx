@@ -27,21 +27,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const[gastoForm,setGastoForm]=useState({data:HOJE,tipo:"material",descricao:"",valor:"",fornecedor:""});
   const[etapaForm,setEtapaForm]=useState({nome:"",dataInicio:"",dataFim:""});
   const[pagForm,setPagForm]=useState({data:HOJE,valor:"",tipo:"recebido",descricao:"",status:"pendente"});
-  const[diarioForm,setDiarioForm]=useState({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:"",foto:""});
-
-  const handleFotoDiario=(e)=>{
-    const file=e.target.files?.[0];if(!file)return;
-    const reader=new FileReader();
-    reader.onload=ev=>{
-      const img=new Image();
-      img.onload=()=>{
-        const maxW=900;const scale=Math.min(1,maxW/img.width);
-        const canvas=document.createElement("canvas");canvas.width=img.width*scale;canvas.height=img.height*scale;
-        canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-        setDiarioForm(f=>({...f,foto:canvas.toDataURL("image/jpeg",0.72)}));
-      };img.src=ev.target.result;
-    };reader.readAsDataURL(file);
-  };
+  const[diarioForm,setDiarioForm]=useState({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});
 
   const recarregar=async()=>{
     const[g,e,p,d]=await Promise.all([getGastos(obra.id),getEtapas(obra.id),getPagamentos(obra.id),getDiario(obra.id)]);
@@ -83,7 +69,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const salvarDiario=async()=>{
     if(!diarioForm.descricao.trim())return;
     const d={...diarioForm,ownerEmail:user.email,obraId:obra.id,trabalhadores:parseInt(diarioForm.trabalhadores)||0};
-    await saveDiario(d);setDiarioModal(false);setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:"",foto:""});await recarregar();
+    await saveDiario(d);setDiarioModal(false);setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});await recarregar();
   };
 
   const totalGasto=gastos.reduce((s,g)=>s+g.valor,0);
@@ -262,8 +248,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
 
     {aba==="diario"&&<div>
       <button onClick={()=>{setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});setDiarioModal(true)}} style={{width:"100%",background:"linear-gradient(135deg,#d97706,#92400e)",border:"none",borderRadius:12,padding:"11px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:12}}>+ Registro do Dia</button>
-      {diario.map(d=><Card key={d.id} style={{padding:0,overflow:"hidden"}}>
-        {d.foto&&<img src={d.foto} alt="foto" style={{width:"100%",height:150,objectFit:"cover"}}/>}
+      {diario.map(d=><Card key={d.id}>
         <div style={{padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div style={{flex:1}}>
             <div style={{color:"#fbbf24",fontWeight:700,fontSize:13}}>{fmtData(d.data)}{d.clima?" · "+d.clima:""}{d.trabalhadores?" · "+d.trabalhadores+" trabalhadores":""}</div>
@@ -309,13 +294,6 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
       <Input label="Trabalhadores presentes" type="number" value={diarioForm.trabalhadores||""} onChange={e=>setDiarioForm({...diarioForm,trabalhadores:e.target.value})} placeholder="0" inputMode="numeric"/>
       <Input label="Clima (opcional)" value={diarioForm.clima||""} onChange={e=>setDiarioForm({...diarioForm,clima:e.target.value})} placeholder="Ex: Sol, chuva, nublado..."/>
       <Input label="Observacoes (opcional)" value={diarioForm.obs||""} onChange={e=>setDiarioForm({...diarioForm,obs:e.target.value})} placeholder="Ocorrencias, problemas..."/>
-      <div style={{marginBottom:16}}>
-        {diarioForm.foto&&<img src={diarioForm.foto} alt="preview" style={{width:"100%",height:100,objectFit:"cover",borderRadius:8,marginBottom:6}}/>}
-        <label style={{display:"flex",alignItems:"center",gap:8,background:"rgba(217,119,6,.08)",border:"1px solid rgba(217,119,6,.2)",borderRadius:10,padding:"8px 14px",cursor:"pointer",color:"#f59e0b",fontSize:13,fontWeight:600}}>
-          📷 {diarioForm.foto?"Trocar foto":"Foto da obra"}
-          <input type="file" accept="image/*" capture="environment" onChange={handleFotoDiario} style={{display:"none"}}/>
-        </label>
-      </div>
       <Btn onClick={salvarDiario}>Salvar Registro</Btn>
     </Modal>
 

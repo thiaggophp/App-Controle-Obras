@@ -35,8 +35,8 @@ export default function App(){
       const cache=JSON.parse(salvo);
       try{
         const atualizado=await getAccount(cache.email);
-        if(atualizado&&atualizado.status==="blocked"){localStorage.removeItem("obras_usuario")}
-        else if(atualizado&&atualizado.status==="active"){setUsuario(atualizado);localStorage.setItem("obras_usuario",JSON.stringify(atualizado));if(atualizado.mustChangePassword)setSenhaModal(true)}
+        if(!atualizado||atualizado.status==="blocked"){localStorage.removeItem("obras_usuario")}
+        else if(atualizado.status==="active"){setUsuario(atualizado);localStorage.setItem("obras_usuario",JSON.stringify(atualizado));if(atualizado.mustChangePassword)setSenhaModal(true)}
         else{setUsuario(cache)}
       }catch{setUsuario(cache)}
     }
