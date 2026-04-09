@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getObras,saveObra,deleteObra}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 
 const STATUS=[{value:"andamento",label:"Em andamento"},{value:"pausada",label:"Pausada"},{value:"concluida",label:"Concluida"}];
@@ -89,7 +89,7 @@ export default function Obras({user,onAbrirObra}){
       <Input label="Endereco" value={form.endereco||""} onChange={e=>setForm({...form,endereco:e.target.value})} placeholder="Rua, numero, bairro..."/>
       <Input label="Data de inicio" type="date" value={form.dataInicio} onChange={e=>setForm({...form,dataInicio:e.target.value})}/>
       <Input label="Previsao de termino" type="date" value={form.dataPrevisao||""} onChange={e=>setForm({...form,dataPrevisao:e.target.value})}/>
-      <Input label="Orcamento (R$)" type="number" value={form.orcamento} onChange={e=>setForm({...form,orcamento:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Orcamento (R$)" value={form.orcamento} onChange={e=>setForm({...form,orcamento:e.target.value})} placeholder="0,00"/>
       {edit&&<Select label="Status" value={form.status} onChange={e=>setForm({...form,status:e.target.value})} options={STATUS}/>}
       <Input label="Observacoes (opcional)" value={form.obs||""} onChange={e=>setForm({...form,obs:e.target.value})} placeholder="Detalhes adicionais..."/>
       <Btn onClick={salvar}>{edit?"Salvar Alteracoes":"Criar Obra"}</Btn>

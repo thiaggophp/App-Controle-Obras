@@ -1,6 +1,6 @@
 import{useState,useEffect}from"react";
 import{getGastos,saveGasto,deleteGasto,getEtapas,saveEtapa,deleteEtapa,getPagamentos,savePagamento,deletePagamento,getDiario,saveDiario,deleteDiario,saveObra}from"../db";
-import{Btn,Input,Select}from"../components/FormElements";
+import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 import Card from"../components/Card";
 
@@ -265,7 +265,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
       <Input label="Data" type="date" value={gastoForm.data} onChange={e=>setGastoForm({...gastoForm,data:e.target.value})}/>
       <Select label="Tipo" value={gastoForm.tipo} onChange={e=>setGastoForm({...gastoForm,tipo:e.target.value})} options={TIPOS_GASTO}/>
       <Input label="Descricao" value={gastoForm.descricao} onChange={e=>setGastoForm({...gastoForm,descricao:e.target.value})} placeholder="Ex: Cimento, servico de pedreiro..."/>
-      <Input label="Valor (R$)" type="number" value={gastoForm.valor} onChange={e=>setGastoForm({...gastoForm,valor:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Valor (R$)" value={gastoForm.valor} onChange={e=>setGastoForm({...gastoForm,valor:e.target.value})} placeholder="0,00"/>
       <Input label="Fornecedor / Responsavel (opcional)" value={gastoForm.fornecedor||""} onChange={e=>setGastoForm({...gastoForm,fornecedor:e.target.value})} placeholder="Nome do fornecedor..."/>
       <Btn onClick={salvarGasto}>{editGasto?"Salvar":"Registrar Gasto"}</Btn>
     </Modal>
@@ -283,7 +283,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
       <Input label="Data" type="date" value={pagForm.data} onChange={e=>setPagForm({...pagForm,data:e.target.value})}/>
       <Select label="Tipo" value={pagForm.tipo} onChange={e=>setPagForm({...pagForm,tipo:e.target.value})} options={[{value:"recebido",label:"Recebimento do cliente"},{value:"pago",label:"Pagamento a terceiro"}]}/>
       <Input label="Descricao" value={pagForm.descricao||""} onChange={e=>setPagForm({...pagForm,descricao:e.target.value})} placeholder="Ex: Medicao 1, parcela inicial..."/>
-      <Input label="Valor (R$)" type="number" value={pagForm.valor} onChange={e=>setPagForm({...pagForm,valor:e.target.value})} placeholder="0,00" inputMode="decimal"/>
+      <InputMoney label="Valor (R$)" value={pagForm.valor} onChange={e=>setPagForm({...pagForm,valor:e.target.value})} placeholder="0,00"/>
       <Select label="Status" value={pagForm.status} onChange={e=>setPagForm({...pagForm,status:e.target.value})} options={[{value:"pendente",label:"Pendente"},{value:"pago",label:"Pago/Recebido"}]}/>
       <Btn onClick={salvarPag}>Salvar Pagamento</Btn>
     </Modal>
