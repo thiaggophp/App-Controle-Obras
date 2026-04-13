@@ -82,6 +82,26 @@ export async function importAllData(data){
   for(const d of data.diario||[]){if(d.obraId&&idMap[d.obraId])d.obraId=idMap[d.obraId];d.id=null;await saveDiario(d);}
 }
 
+// ─── CASCADE DELETE ───
+export async function deleteObraCascade(obraId){
+  const gastos=await getGastos(obraId);
+  for(const g of gastos)await deleteGasto(g.id);
+  const etapas=await getEtapas(obraId);
+  for(const e of etapas)await deleteEtapa(e.id);
+  const pagamentos=await getPagamentos(obraId);
+  for(const p of pagamentos)await deletePagamento(p.id);
+  const diario=await getDiario(obraId);
+  for(const d of diario)await deleteDiario(d.id);
+  await deleteObra(obraId);
+}
+export async function deleteUserCascade(email){
+  try{
+    const obras=await getObras(email);
+    for(const o of obras)await deleteObraCascade(o.id);
+    await deleteAccount(email);
+  }catch{}
+}
+
 // ─── INIT ADMIN ───
 export async function initAdmin(){
   // Admin account is created once via API — no credentials compiled into the bundle

@@ -1,5 +1,5 @@
 import{useState,useEffect}from"react";
-import{getObras,saveObra,deleteObra}from"../db";
+import{getObras,saveObra,deleteObraCascade}from"../db";
 import{Btn,Input,InputMoney,Select}from"../components/FormElements";
 import Modal from"../components/Modal";
 
@@ -27,7 +27,7 @@ export default function Obras({user,onAbrirObra}){
     await saveObra(o);setModal(false);await recarregar();
   };
 
-  const excluir=async()=>{await deleteObra(deleteModal.id);setDeleteModal(null);await recarregar()};
+  const excluir=async()=>{await deleteObraCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
 
   const diasRestantes=(o)=>{
     if(!o.dataPrevisao)return null;
