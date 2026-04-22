@@ -34,12 +34,22 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
     setGastos(g);setEtapas(e);setPagamentos(p);setDiario(d);
   };
   useEffect(()=>{recarregar()},[obra.id]);
+  useEffect(()=>{
+    try{const s=localStorage.getItem("obras_gasto_form");if(s)setGastoForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("obras_etapa_form");if(s)setEtapaForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("obras_pag_form");if(s)setPagForm(f=>({...f,...JSON.parse(s)}))}catch{}
+    try{const s=localStorage.getItem("obras_diario_form");if(s)setDiarioForm(f=>({...f,...JSON.parse(s)}))}catch{}
+  },[]);
+  useEffect(()=>{if(!editGasto)try{localStorage.setItem("obras_gasto_form",JSON.stringify(gastoForm))}catch{}},[gastoForm,editGasto]);
+  useEffect(()=>{try{localStorage.setItem("obras_etapa_form",JSON.stringify(etapaForm))}catch{}},[etapaForm]);
+  useEffect(()=>{try{localStorage.setItem("obras_pag_form",JSON.stringify(pagForm))}catch{}},[pagForm]);
+  useEffect(()=>{try{localStorage.setItem("obras_diario_form",JSON.stringify(diarioForm))}catch{}},[diarioForm]);
 
   const salvarGasto=async()=>{
     if(!gastoForm.valor)return;
     const g={...gastoForm,ownerEmail:user.email,obraId:obra.id,valor:parseFloat(gastoForm.valor)||0};
     if(editGasto)g.id=editGasto.id;
-    await saveGasto(g);setGastoModal(false);setEditGasto(null);await recarregar();
+    await saveGasto(g);localStorage.removeItem("obras_gasto_form");setGastoModal(false);setEditGasto(null);await recarregar();
   };
 
   const adicionarEtapasPadrao=async()=>{
@@ -52,7 +62,7 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const salvarEtapa=async()=>{
     if(!etapaForm.nome.trim())return;
     const e={...etapaForm,ownerEmail:user.email,obraId:obra.id,ordem:etapas.length+1,status:"pendente"};
-    await saveEtapa(e);setEtapaModal(false);setEtapaForm({nome:"",dataInicio:"",dataFim:""});await recarregar();
+    await saveEtapa(e);localStorage.removeItem("obras_etapa_form");setEtapaModal(false);setEtapaForm({nome:"",dataInicio:"",dataFim:""});await recarregar();
   };
 
   const alterarStatusEtapa=async(etapa)=>{
@@ -63,13 +73,13 @@ export default function ObraDetalhe({obra,user,onVoltar,onAtualizar}){
   const salvarPag=async()=>{
     if(!pagForm.valor)return;
     const p={...pagForm,ownerEmail:user.email,obraId:obra.id,valor:parseFloat(pagForm.valor)||0};
-    await savePagamento(p);setPagModal(false);await recarregar();
+    await savePagamento(p);localStorage.removeItem("obras_pag_form");setPagModal(false);await recarregar();
   };
 
   const salvarDiario=async()=>{
     if(!diarioForm.descricao.trim())return;
     const d={...diarioForm,ownerEmail:user.email,obraId:obra.id,trabalhadores:parseInt(diarioForm.trabalhadores)||0};
-    await saveDiario(d);setDiarioModal(false);setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});await recarregar();
+    await saveDiario(d);localStorage.removeItem("obras_diario_form");setDiarioModal(false);setDiarioForm({data:HOJE,descricao:"",trabalhadores:"",clima:"",obs:""});await recarregar();
   };
 
   const totalGasto=gastos.reduce((s,g)=>s+g.valor,0);

@@ -16,6 +16,8 @@ export default function Obras({user,onAbrirObra}){
 
   const recarregar=async()=>setObras(await getObras(user.email));
   useEffect(()=>{recarregar()},[user.email]);
+  useEffect(()=>{const s=localStorage.getItem("obras_obra_form");if(s)try{setForm(f=>({...f,...JSON.parse(s)}))}catch{}},[]);
+  useEffect(()=>{if(!edit)try{localStorage.setItem("obras_obra_form",JSON.stringify(form))}catch{}},[form,edit]);
 
   const abrirNovo=()=>{setEdit(null);setForm({nome:"",cliente:"",endereco:"",dataInicio:HOJE,dataPrevisao:"",orcamento:"",obs:""});setModal(true)};
   const abrirEditar=(o)=>{setEdit(o);setForm({...o,orcamento:String(o.orcamento||"")});setModal(true)};
@@ -24,7 +26,7 @@ export default function Obras({user,onAbrirObra}){
     if(!form.nome.trim())return;
     const o={...form,ownerEmail:user.email,status:form.status||"andamento",orcamento:parseFloat(form.orcamento)||0};
     if(edit)o.id=edit.id;
-    await saveObra(o);setModal(false);await recarregar();
+    await saveObra(o);localStorage.removeItem("obras_obra_form");setModal(false);await recarregar();
   };
 
   const excluir=async()=>{await deleteObraCascade(deleteModal.id);setDeleteModal(null);await recarregar()};
